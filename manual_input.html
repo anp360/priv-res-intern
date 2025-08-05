@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manual Input Page</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --light-bg: #f4f7f9;
+      --dark-bg: #181c24;
+      --light-text: #1f1f1f;
+      --dark-text: #f1f1f1;
+      --input-bg-light: #ffffff;
+      --input-bg-dark: #252b36;
+      --input-text-light: #111;
+      --input-text-dark: #f5f5f5;
+      --accent: #4da6ff;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Roboto Mono', monospace;
+      background-color: var(--dark-bg);
+      color: var(--dark-text);
+      transition: background 0.4s, color 0.4s;
+    }
+
+    .toggle-mode {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      padding: 8px 16px;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      transition: background 0.3s;
+    }
+
+    .container {
+      position: relative;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 2rem;
+      z-index: 1;
+    }
+
+    .form-box {
+      background-color: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(16px);
+      padding: 30px 40px;
+      border-radius: 18px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+      width: 100%;
+      max-width: 480px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    input[type="text"],
+    input[type="datetime-local"] {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 24px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 1rem;
+      background: var(--input-bg-dark);
+      color: var(--input-text-dark);
+      transition: all 0.3s;
+    }
+
+    input::placeholder {
+      color: #aaa;
+    }
+
+    button.submit-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--accent);
+      color: white;
+      font-weight: bold;
+      font-size: 1rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button.submit-btn:hover {
+      background-color: #3399ff;
+    }
+
+    .wave {
+      position: absolute;
+      width: 300%;
+      height: 25%;
+      bottom: 0;
+      left: 0;
+      background: linear-gradient(to top, #4da6ff 0%, transparent 80%);
+      animation: wave 10s ease-in-out infinite;
+      z-index: 0;
+      border-radius: 50% 50% 0 0;
+      opacity: 0.15;
+    }
+
+    @keyframes wave {
+      0%, 100% {
+        transform: translateX(0);
+      }
+      50% {
+        transform: translateX(-30%);
+      }
+    }
+
+    body.light-mode {
+      background-color: var(--light-bg);
+      color: var(--light-text);
+    }
+
+    body.light-mode input {
+      background: var(--input-bg-light);
+      color: var(--input-text-light);
+      border: 1px solid #ccc;
+    }
+
+    body.light-mode .form-box {
+      background-color: rgba(255, 255, 255, 0.6);
+    }
+
+    body.light-mode .wave {
+      background: linear-gradient(to top, #4da6ff 0%, transparent 80%);
+      opacity: 0.2;
+    }
+  </style>
+</head>
+<body>
+  <button class="toggle-mode" onclick="toggleMode()">Toggle Mode</button>
+  <div class="wave"></div>
+
+  <div class="container">
+    <form class="form-box" id="inputForm">
+      <label for="reading-datetime">Current Reading Date & Time:</label>
+      <input type="datetime-local" id="reading-datetime" name="datetime" required>
+
+      <label for="water-level">Current Water Level (feet):</label>
+      <input type="text" id="water-level" name="level" placeholder="e.g., 13.46" required>
+
+      <label for="water-volume">Current Water Volume (mcft):</label>
+      <input type="text" id="water-volume" name="volume" placeholder="e.g., 1261" required>
+
+      <button type="submit" class="submit-btn">Submit</button>
+    </form>
+  </div>
+
+  <script>
+    function toggleMode() {
+      document.body.classList.toggle("light-mode");
+    }
+
+    document.getElementById("inputForm").addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const datetime = document.getElementById("reading-datetime").value;
+      const level = document.getElementById("water-level").value;
+      const volume = document.getElementById("water-volume").value;
+
+      const response = await fetch("http://127.0.0.1:5000/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ datetime, level, volume }),
+      });
+
+      const result = await response.json();
+      alert(result.message);
+    });
+  </script>
+</body>
+</html>

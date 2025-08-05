@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login - Flood Mitigation System</title>
+
+  <!-- ===== Inline CSS (for easy single-file demo) ===== -->
+  <style>
+    /* Reset */
+    * { box-sizing: border-box; margin:0; padding:0; }
+    :root{
+      --accent: #00c6ff;
+      --card-radius: 16px;
+      --glass-bg-dark: rgba(255,255,255,0.06);
+      --glass-bg-light: rgba(255,255,255,0.9);
+      --text-dark: #0b1221;
+      --text-light: #f7fbff;
+      --wave1-dark: #052f47;
+      --wave2-dark: #074e67;
+      --wave3-dark: #0b6a86;
+      --wave1-light: #bfe9ff;
+      --wave2-light: #9fddff;
+      --wave3-light: #7fd0ff;
+    }
+
+    html,body { height:100%; font-family: "Segoe UI", Roboto, system-ui, -apple-system, "Helvetica Neue", Arial; }
+
+    /* Body themes */
+    body {
+      transition: background 0.6s ease, color 0.4s ease;
+      min-height:100%;
+      position:relative;
+      overflow:hidden;
+      padding: 32px;
+    }
+
+    body.dark-mode {
+      background: linear-gradient(180deg,#071923 0%, #072b38 50%, #0b3a4a 100%);
+      color: var(--text-light);
+    }
+    body.light-mode {
+      background: linear-gradient(180deg,#e9f6ff 0%, #d9eefc 50%, #cfe9fb 100%);
+      color: var(--text-dark);
+    }
+
+    /* Theme toggle */
+    .theme-toggle {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      z-index:60;
+      user-select:none;
+    }
+    .mode-label { font-size:13px; opacity:0.95; }
+    .switch {
+      width:50px; height:28px; border-radius:999px;
+      background:rgba(255,255,255,0.12);
+      display:inline-block; position:relative; cursor:pointer;
+      transition: background 0.25s ease;
+    }
+    .switch input { display:none; }
+    .knob {
+      position:absolute; top:3px; left:3px; width:22px; height:22px; border-radius:50%;
+      background:#fff; transition: transform 0.28s cubic-bezier(.2,.9,.3,1);
+      box-shadow: 0 4px 10px rgba(2,6,23,0.45);
+    }
+    .switch.checked { background:rgba(0,0,0,0.25); }
+    .switch.checked .knob { transform: translateX(22px); }
+
+    /* Layout center */
+    .wrap {
+      display:flex; align-items:center; justify-content:center;
+      min-height:100vh;
+      position:relative;
+      z-index:20;
+      padding: 48px 24px;
+    }
+
+    /* Card */
+    .login-card {
+      width:100%;
+      max-width:420px;
+      border-radius: var(--card-radius);
+      padding:30px;
+      box-shadow: 0 20px 60px rgba(2,8,23,0.5);
+      backdrop-filter: blur(8px) saturate(1.05);
+      transform-origin:center;
+      animation: popIn 600ms cubic-bezier(.2,.9,.3,1) 0.08s both;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    body.dark-mode .login-card {
+      background: var(--glass-bg-dark);
+      color:var(--text-light);
+    }
+    body.light-mode .login-card {
+      background: var(--glass-bg-light);
+      color:var(--text-dark);
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 14px 40px rgba(12,30,60,0.08);
+    }
+
+    @keyframes popIn {
+      from { opacity:0; transform: translateY(-18px) scale(0.985); }
+      to   { opacity:1; transform: translateY(0) scale(1); }
+    }
+
+    .title {
+      text-align:center;
+      font-size:20px;
+      margin-bottom:6px;
+      color:var(--accent);
+      letter-spacing:0.2px;
+    }
+    .subtitle { text-align:center; font-size:15px; margin-bottom:18px; color:inherit; opacity:0.95; }
+
+    /* Form styling */
+    label { display:block; font-size:13px; margin-bottom:6px; opacity:0.9; }
+    .input {
+      width:100%;
+      padding:11px 12px;
+      border-radius:10px;
+      border:none;
+      font-size:15px;
+      margin-bottom:14px;
+      transition: box-shadow .22s ease, transform .12s ease, background .22s;
+    }
+    body.dark-mode .input { background: rgba(255,255,255,0.03); color:inherit; }
+    body.light-mode .input { background: rgba(12,30,50,0.03); color:inherit; }
+    .input:focus { outline:none; transform: translateY(-2px); box-shadow: 0 10px 30px rgba(2,8,23,0.12); }
+
+    .btn {
+      display:inline-block; width:100%;
+      padding:12px 14px; border-radius:10px; border:0;
+      font-weight:600; font-size:15px; cursor:pointer;
+      transition: transform .12s ease, box-shadow .18s;
+      margin-top:6px;
+    }
+    body.dark-mode .btn { background: var(--accent); color:#04202b; }
+    body.light-mode .btn { background: #007bbd; color:#ffffff; }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 14px 36px rgba(2,8,23,0.18); }
+    .extras { margin-top:12px; text-align:center; font-size:13px; }
+    .forgot { color:inherit; opacity:0.85; text-decoration:none; }
+    .forgot:hover { text-decoration: underline; opacity:1; }
+
+    /* Small helper row */
+    .meta {
+      display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:10px;
+      font-size:13px;
+    }
+
+    /* Waves container (fills screen behind the card) */
+    .waves {
+      position: absolute;
+      left: 0; right:0; bottom: -2%;
+      pointer-events:none;
+      z-index:2;
+      overflow:visible;
+      height: 42vh;
+    }
+
+    /* SVG waves are positioned and animated via CSS */
+    .wave {
+      transform: translate3d(0,0,0);
+      opacity: 0.95;
+    }
+
+    /* Layered parallax animation: different durations for depth */
+    .wave.w1 { animation: moveWave 10s linear infinite; }
+    .wave.w2 { animation: moveWave 14s linear infinite reverse; opacity:0.85; }
+    .wave.w3 { animation: moveWave 22s linear infinite; opacity:0.8; filter: blur(0.2px); }
+
+    /* vertical bobbing to feel 'liquid' */
+    .waveGroup { animation: bob 6s ease-in-out infinite; transform-origin:center; }
+    @keyframes bob {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(6px); }
+      100% { transform: translateY(0); }
+    }
+
+    /* horizontal translation of the path group */
+    @keyframes moveWave {
+      from { transform: translateX(0); }
+      to { transform: translateX(-30%); }
+    }
+
+    /* Theme-specific wave colors */
+    body.dark-mode .wave-color-1 { fill: var(--wave1-dark); }
+    body.dark-mode .wave-color-2 { fill: var(--wave2-dark); }
+    body.dark-mode .wave-color-3 { fill: var(--wave3-dark); }
+
+    body.light-mode .wave-color-1 { fill: var(--wave1-light); }
+    body.light-mode .wave-color-2 { fill: var(--wave2-light); }
+    body.light-mode .wave-color-3 { fill: var(--wave3-light); }
+
+    /* Responsive */
+    @media (max-width:480px){
+      .login-card { padding:20px; border-radius:12px; }
+      .title { font-size:18px; }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Theme toggle (JS will set state from localStorage) -->
+  <div class="theme-toggle" aria-hidden="false">
+    <div id="switch" class="switch" role="switch" aria-checked="true" tabindex="0">
+      <div class="knob" aria-hidden="true"></div>
+    </div>
+    <div class="mode-label" id="modeLabel">Dark Mode</div>
+  </div>
+
+  <!-- Centered login card -->
+  <div class="wrap">
+    <section class="login-card" aria-labelledby="loginTitle" role="region">
+      <div class="title" id="loginTitle">🌊 Flood Mitigation System</div>
+      <div class="subtitle">Welcome back — sign in to continue</div>
+
+      <form class="login-form" action="manual_input.html" method="get" aria-describedby="loginDesc">
+        <div id="loginDesc" style="display:none">Login to access flood mitigation dashboard</div>
+
+        <label for="user">User ID</label>
+        <input class="input" id="user" name="user" type="text" autocomplete="username" placeholder="your.user@example.com" required />
+
+        <label for="pass">Password</label>
+        <input class="input" id="pass" name="pass" type="password" autocomplete="current-password" placeholder="••••••••" required />
+
+        <button class="btn" type="submit">Log In</button>
+
+        <div class="meta">
+          <a class="forgot" href="#" aria-label="Forgot password">Forgot password?</a>
+          <div style="opacity:0.85; font-size:13px">Need an account? <a href="#" style="text-decoration:none; font-weight:600">Sign up</a></div>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <!-- Animated Waves (SVG) -->
+  <svg class="waves" viewBox="0 0 1200 300" preserveAspectRatio="none" aria-hidden="true">
+    <g class="waveGroup" transform="translate(0,0)">
+      <!-- Back-most / deep -->
+      <path class="wave w3 wave-color-3" d="M0,120 C150,200 350,20 600,120 C900,220 1050,80 1200,120 L1200,300 L0,300 Z"></path>
+      <!-- middle -->
+      <path class="wave w2 wave-color-2" d="M0,140 C200,60 350,260 600,140 C850,20 1000,240 1200,140 L1200,300 L0,300 Z"></path>
+      <!-- front -->
+      <path class="wave w1 wave-color-1" d="M0,160 C120,120 360,220 600,160 C840,100 1000,220 1200,160 L1200,300 L0,300 Z"></path>
+    </g>
+  </svg>
+
+  <!-- ===== Inline JS ===== -->
+  <script>
+    // Elements
+    const body = document.body;
+    const switchEl = document.getElementById('switch');
+    const modeLabel = document.getElementById('modeLabel');
+
+    // Read saved theme from localStorage (default dark)
+    const saved = localStorage.getItem('site-theme') || 'dark';
+    setTheme(saved, false);
+
+    // Click handler toggles theme
+    switchEl.addEventListener('click', () => {
+      const newTheme = body.classList.contains('dark-mode') ? 'light' : 'dark';
+      setTheme(newTheme, true);
+    });
+
+    // Also allow keyboard toggle (space / enter)
+    switchEl.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        switchEl.click();
+      }
+    });
+
+    function setTheme(theme, persist=true) {
+      if (theme === 'light') {
+        body.classList.add('light-mode');
+        body.classList.remove('dark-mode');
+        switchEl.classList.add('checked');
+        switchEl.setAttribute('aria-checked','false');
+        modeLabel.textContent = 'Light Mode';
+      } else {
+        body.classList.add('dark-mode');
+        body.classList.remove('light-mode');
+        switchEl.classList.remove('checked');
+        switchEl.setAttribute('aria-checked','true');
+        modeLabel.textContent = 'Dark Mode';
+      }
+      if (persist) localStorage.setItem('site-theme', theme);
+    }
+
+    // Small accessible focus ring for keyboard users
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') document.body.classList.add('show-focus-outline');
+    });
+
+    // Prevent tab outline suppression for mouse users (nice-to-have)
+    document.addEventListener('mousedown', () => {
+      document.body.classList.remove('show-focus-outline');
+    });
+  </script>
+</body>
+</html>
